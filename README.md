@@ -1,5 +1,8 @@
 # AI-based-Meme-Recognition-Classification-and-Hate-Speech-Detection
 This project analyzes memes by extracting text, detecting sentiment, classifying images, flagging harmful content, and assigning meme categories using BERT, ResNet-50, and EasyOCR. It provides a full report and visualizes component-wise model accuracy.
+
+This project is part of a research paper authored by me and my brother, Rohan, under the guidance of Dr. Mohan. Our work on AI-based meme analysis has been shortlisted for publication, showcasing our application of NLP and computer vision to extract text, detect sentiment, classify images, flag harmful content, and assign meme categories. This GitHub repo demonstrates our implementation using BERT, EasyOCR, and ResNet-50, highlighting the potential of multimodal AI in understanding and moderating digital media.
+
 here's the code:
 
 import torch
