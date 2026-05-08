@@ -1,4 +1,4 @@
-#  MemeIQ — AI-Powered Meme Analysis & Hate Speech Detection
+#  MemeIQ — AI-Powered Meme Recognition, Classification & Hate Speech Detection
 
 <div align="center">
 
@@ -11,37 +11,138 @@
 
 **A production-grade multimodal AI system for meme understanding, hate speech detection, sentiment analysis, and category classification.**
 
-*Research paper shortlisted for publication — authored with Rohan Madanu under the guidance of Dr. Mohan.*
+*Based on a shortlisted research paper authored by Pranav Madanu and Rohan Madanu, under the guidance of Dr. B. Mohan Rao, KLH University.*
 
-[Features](#-features) • [Architecture](#-architecture) • [Models](#-models-used) • [Setup](#-quick-start) • [API](#-api-reference) • [Results](#-results)
+[Research Paper](#-research-paper) • [What Changed](#-from-paper-to-production--what-we-upgraded) • [Architecture](#-system-architecture) • [Models](#-models-used) • [Setup](#-quick-start) • [Results](#-results)
 
 </div>
 
 ---
 
-##  What is MemeIQ?
+##  Research Paper
 
-Memes are one of the most complex forms of digital communication — they blend image, text, cultural context, and tone in ways that standard NLP tools completely fail to understand. A keyword-based hate speech detector will flag *"When you destroy them in chess"* as violent. A text-only sentiment model has no idea that a smiling Tom & Jerry image changes the meaning of everything.
+This repository is the direct implementation of the research paper:
 
-MemeIQ solves this with a **true multimodal pipeline** — combining OCR, transformer-based NLP, and CLIP's joint image-text embedding space to analyze memes the way humans actually read them.
+> **"AI-based Meme Recognition, Classification, and Hate Speech Detection"**
+> Pranav Madanu, Rohan Madanu, Badavath MohanRao
+> KLH University — Shortlisted for Publication
+
+The paper is available in this repository: [`Meme_classification_ResearchPaper_draft.pdf`](./Meme_classification_ResearchPaper_draft.pdf)
+
+### What the Paper Proposed
+
+The research identified a critical gap in content moderation: over 60% of hate speech on platforms like Twitter and Facebook is embedded in memes, yet existing tools analyze text and images in isolation — completely missing the contextual interplay between them.
+
+The paper proposed a multimodal AI framework with three phases:
+
+**1. Recognition** — Detecting memes in social media streams using EasyOCR for text extraction.
+
+**2. Classification** — Categorizing memes by theme (politics, humour, motivation, offensive, neutral) using a dual-pathway deep learning model: ResNet-50 for visual features fused with BERT for text features via an attention-weighting mechanism into a 512-dimensional joint embedding.
+
+**3. Harm Detection** — Identifying hate speech using keyword-based filtering alongside BERT sentiment classification.
+
+### Paper Results
+
+The research achieved strong classification performance on a curated dataset of 7,000 memes (Hateful Memes, MAMI, Dank Memes, Memotion), annotated by three independent annotators with Cohen's kappa κ=0.82:
+
+| Task | Metric | Score |
+|------|--------|-------|
+| Thematic Classification | Overall Accuracy | 85.4% (±1.2%) |
+| Humour Category | Precision / Recall | 0.87 / 0.82 |
+| Politics Category | Precision / Recall | 0.91 / 0.88 |
+| Sentiment Analysis | Accuracy | 81.2% |
+| Sarcasm Detection | F1 | 0.77 |
+| Multimodal vs Text-only | F1 improvement | +8.9% |
+
+The ablation study was particularly significant — it confirmed the core thesis: multimodal fusion (F1=0.86) consistently outperformed text-only (F1=0.79) and image-only (F1=0.72) approaches, validating the case for joint visual-textual analysis.
 
 ---
 
-##  Features
+## 🔄 From Paper to Production — What We Upgraded
 
-- ** OCR with preprocessing** — EasyOCR with contrast enhancement and adaptive thresholding for meme fonts
-- ** Domain-specific sentiment** — Twitter-RoBERTa trained on 124M tweets, matched to meme language style
-- ** Contextual hate detection** — Dehatebert + fine-tuned CLIP ensemble with confidence thresholds and human review flags
-- ** True multimodality** — CLIP ViT-B/32 encodes image and text into the same embedding space for genuine cross-modal understanding
-- ** Zero-shot categorization** — BART-MNLI classifies memes into 10 categories without any training
-- ** FastAPI backend** — async REST API with Pydantic validation and Swagger docs
-- ** Streamlit UI** — dark-themed interactive interface with score visualizations
-- ** Evaluation metrics** — F1, precision, recall, confusion matrix, ROC-AUC
-- ** Fine-tuned on Hateful Memes** — CLIP classifier trained on Facebook's 10k hateful memes dataset
+The paper established the research foundation. This repository takes every component and upgrades it to production-grade quality, replacing prototype implementations with state-of-the-art models and a full software stack.
+
+### 1. Sentiment Analysis: Raw BERT → Twitter-RoBERTa
+
+| | Paper | This Repo |
+|--|-------|-----------|
+| Model | `bert-base-uncased` (not fine-tuned) | `cardiffnlp/twitter-roberta-base-sentiment` |
+| Training data | Wikipedia + BooksCorpus | 124M tweets |
+| Labels | positive, negative, neutral, sarcastic | positive, neutral, negative |
+| Output | Arbitrary logits (no calibration) | Calibrated probabilities with confidence scores |
+
+**Why:** Raw BERT was pre-trained on formal English. Meme text is informal, abbreviated, ironic, and sarcastic — linguistically much closer to Twitter than Wikipedia. Twitter-RoBERTa was specifically fine-tuned on 124M tweets, making it dramatically better suited for meme language.
 
 ---
 
-##  Architecture
+### 2. Hate Speech Detection: Keyword List → Dehatebert + Fine-tuned CLIP Ensemble
+
+| | Paper | This Repo |
+|--|-------|-----------|
+| Method | Keyword matching (`['hate', 'kill', 'attack'...]`) | `Hate-speech-CNERG/dehatebert-mono-english` + fine-tuned CLIP |
+| Context awareness | None — purely lexical | Full sentence context + image context |
+| Confidence | Binary yes/no | Continuous score 0–1 with human review flags |
+| Multimodal | No | Yes — CLIP sees both image and text simultaneously |
+
+**Why:** Keyword detection has catastrophic false positive rates. "Kill it on stage" and "destroy them in chess" would both be flagged. Dehatebert understands sentence context. More critically, we added a fine-tuned CLIP classifier that sees the image too — because whether something is hateful often depends entirely on visual context, not just the words.
+
+---
+
+### 3. Image Analysis: ResNet-50 (ImageNet) → CLIP ViT-B/32
+
+| | Paper | This Repo |
+|--|-------|-----------|
+| Model | ResNet-50 pretrained on ImageNet | `openai/clip-vit-base-patch32` |
+| Output | ImageNet category (e.g., "comic book", "carton") | Open-ended text descriptions (e.g., "a meme about dark humor") |
+| Image-text interaction | Late fusion via attention weighting | Shared embedding space — true multimodal understanding |
+| Flexibility | Fixed 1000 ImageNet classes | Any text-described category, no retraining needed |
+
+**Why:** ResNet classifying memes into ImageNet categories produces meaningless results for this domain. CLIP was trained on 400M image-text pairs and understands open-ended language descriptions. When we ask "is this a meme about gaming?", CLIP gives a meaningful answer. ResNet cannot.
+
+---
+
+### 4. Meme Categorization: Random Assignment → Zero-Shot DistilBERT-MNLI
+
+| | Paper | This Repo |
+|--|-------|-----------|
+| Method | `np.random.choice(meme_categories)` ← literally random | `typeform/distilbert-base-uncased-mnli` zero-shot NLI |
+| Accuracy | 0% (random) | ~80% confidence on clear categories |
+| Flexibility | Fixed hardcoded list | Edit `config.py` to add/change categories instantly |
+
+**Why:** The paper's original implementation was a placeholder for future work. Zero-shot NLI classification uses natural language entailment to match meme text against category descriptions without any labeled training data.
+
+---
+
+### 5. Fine-Tuning on Hateful Memes Dataset (New — Not in Paper)
+
+The paper proposed using the Hateful Memes dataset for evaluation but did not fine-tune on it. We implemented full fine-tuning:
+
+- **Architecture:** CLIP ViT-B/32 backbone + custom 3-layer classifier head (1024→512→128→2)
+- **Strategy:** Partial fine-tuning — frozen layers 1–9, trainable layers 10–11 + projection + classifier (14.3% of parameters)
+- **Dataset:** Facebook Hateful Memes — 12,887 training memes, 3,000 test memes
+- **Hardware:** Google Colab T4 GPU, batch size 32, 5 epochs
+- **Best checkpoint:** Epoch 4, Val F1 = **0.8219**
+- **Ensemble:** Fine-tuned CLIP score averaged with Dehatebert for final hate classification
+
+---
+
+### 6. Software Architecture: Single Notebook → Production System
+
+The paper's implementation was a single Colab notebook (~150 lines). This repository is a fully modular production system:
+
+| Component | Paper | This Repo |
+|-----------|-------|-----------|
+| Structure | Single `.py` file | `models/`, `utils/`, `api/`, `data/`, `tests/` |
+| API | None | FastAPI with Pydantic schemas, Swagger docs |
+| UI | None | Streamlit dark-themed interactive interface |
+| Logging | `print()` statements | Loguru with rotation, file + console handlers |
+| Error handling | None | Input validation, confidence thresholds, human review flags |
+| Testing | None | Pytest unit + integration tests with mocks |
+| Data pipeline | Manual | HuggingFace Datasets + PyTorch DataLoaders |
+
+---
+
+##  System Architecture
 
 ```
                     ┌─────────────────────────────────────┐
@@ -53,52 +154,51 @@ MemeIQ solves this with a **true multimodal pipeline** — combining OCR, transf
               ▼                    ▼                    ▼
     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
     │   EasyOCR +     │  │  CLIP ViT-B/32  │  │  CLIP ViT-B/32  │
-    │  Preprocessing  │  │  Image Encoder  │  │  Text Encoder   │
+    │  Contrast Enh.  │  │  Image Encoder  │  │  Text Encoder   │
     └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
              │                    │                    │
              ▼                    └─────────┬──────────┘
     ┌─────────────────┐                     │
-    │  Extracted Text │           ┌──────────▼──────────┐
-    └────────┬────────┘           │  Joint Embedding    │
-             │                    │  Space (512-d each) │
-      ┌──────┴──────┐             └──────────┬──────────┘
-      │             │                        │
-      ▼             ▼              ┌──────────▼──────────┐
-┌──────────┐  ┌──────────┐        │  Fine-tuned          │
-│ Twitter  │  │Dehate-   │        │  Classifier Head     │
-│ RoBERTa  │  │ BERT     │        │  (1024→512→128→2)    │
-│Sentiment │  │  Hate    │        └──────────┬──────────┘
-└────┬─────┘  └────┬─────┘                   │
-     │              │              ┌──────────▼──────────┐
-     │              │              │  CLIP Hate Score    │
-     │              └──────────────┤  + Zero-shot Cats   │
-     │                             └──────────┬──────────┘
-     │                                        │
-     └──────────────────┬─────────────────────┘
-                        │
-              ┌──────────▼──────────┐
-              │   Combined Output   │
-              │  Sentiment | Hate   │
-              │  Category | Sim     │
-              └─────────────────────┘
+    │  Extracted Text │          ┌──────────▼──────────┐
+    └────────┬────────┘          │  Shared Embedding   │
+             │                   │  Space (512-d each) │
+      ┌──────┴──────┐            └──────────┬──────────┘
+      │             │                       │
+      ▼             ▼             ┌──────────▼──────────┐
+┌──────────┐  ┌──────────┐       │  Fine-tuned          │
+│ Twitter  │  │Dehate-   │       │  Classifier Head     │
+│ RoBERTa  │  │ BERT     │       │  Val F1 = 0.8219     │
+│Sentiment │  │  Hate    │       └──────────┬──────────┘
+└────┬─────┘  └────┬─────┘                  │
+     │              │             ┌──────────▼──────────┐
+     │              └─────────────┤  CLIP Hate Score +  │
+     │                            │  Zero-shot Category │
+     │                            └──────────┬──────────┘
+     └─────────────────┬─────────────────────┘
+                       │
+             ┌──────────▼──────────┐
+             │   Combined Output   │
+             │  Sentiment | Hate   │
+             │  Category | Sim     │
+             └─────────────────────┘
 ```
 
 ---
 
 ## 🤖 Models Used
 
-| Task | Model | Parameters | Why This Model |
-|------|-------|-----------|----------------|
+| Task | Model | Parameters | Why |
+|------|-------|-----------|-----|
 | OCR | EasyOCR | — | Handles meme fonts, curved text, low contrast |
-| Sentiment | `cardiffnlp/twitter-roberta-base-sentiment` | 125M | Trained on 124M tweets — matches meme language style |
-| Hate Speech | `Hate-speech-CNERG/dehatebert-mono-english` | 110M | Purpose-built for hate detection, understands context |
-| Categorization | `typeform/distilbert-base-uncased-mnli` | 66M | Zero-shot — no training needed, flexible labels |
-| Multimodal | `openai/clip-vit-base-patch32` | 151M | Joint image-text embedding, understands meme context |
-| Fine-tuned Hate | CLIP + Classifier Head (custom) | 21M trainable | Trained on Facebook Hateful Memes dataset |
+| Sentiment | `cardiffnlp/twitter-roberta-base-sentiment` | 125M | Trained on 124M tweets — matches meme language |
+| Hate Speech | `Hate-speech-CNERG/dehatebert-mono-english` | 110M | Purpose-built hate detection with sentence context |
+| Categorization | `typeform/distilbert-base-uncased-mnli` | 66M | Zero-shot — no training data needed |
+| Multimodal | `openai/clip-vit-base-patch32` | 151M | Joint image-text embedding space |
+| Fine-tuned Hate | CLIP + Classifier Head (custom) | 21M trainable | Trained on Facebook Hateful Memes (Val F1=0.82) |
 
 ---
 
-##  Project Structure
+## 📁 Project Structure
 
 ```
 memeIQ/
@@ -111,8 +211,7 @@ memeIQ/
 │   ├── sentiment.py         # Twitter-RoBERTa sentiment classifier
 │   ├── hate_speech.py       # Dehatebert with confidence thresholds
 │   ├── categorizer.py       # DistilBERT zero-shot categorizer
-│   ├── clip_model.py        # CLIP multimodal + fine-tuned classifier
-│   └── clip_finetuned.pt    # Fine-tuned weights (Val F1: 0.82)
+│   └── clip_model.py        # CLIP multimodal + fine-tuned classifier
 │
 ├── utils/
 │   ├── image_utils.py       # Image loading, validation, OCR enhancement
@@ -139,7 +238,7 @@ memeIQ/
 
 ---
 
-##  Quick Start
+## ⚡ Quick Start
 
 ### 1. Clone the repository
 ```bash
@@ -154,10 +253,10 @@ pip install -r requirements.txt
 
 ### 3. Run CLI analysis
 ```bash
-# Fast mode (no CLIP)
+# Fast mode — no CLIP
 python main.py --image your_meme.jpg --no-clip
 
-# Full multimodal analysis
+# Full multimodal pipeline
 python main.py --image your_meme.jpg
 
 # JSON output only
@@ -172,7 +271,7 @@ streamlit run ui/app.py
 ### 5. Start FastAPI server
 ```bash
 uvicorn api.app:app --reload --port 8000
-# Swagger docs → http://localhost:8000/docs
+# Swagger UI → http://localhost:8000/docs
 ```
 
 ### 6. Run tests
@@ -182,11 +281,9 @@ pytest tests/ -v
 
 ---
 
-## 📊 Results
+##  Fine-Tuning Results
 
-### Fine-tuning on Facebook Hateful Memes Dataset
-
-Fine-tuned CLIP ViT-B/32 + custom classifier head on 12,887 labeled memes.
+CLIP ViT-B/32 + classifier head fine-tuned on Facebook Hateful Memes dataset. Google Colab T4 GPU, batch size 32, AdamW + cosine LR scheduling, weighted cross-entropy loss (1:2 for class imbalance), partial fine-tuning (14.3% of parameters trainable).
 
 | Epoch | Train Loss | Train F1 | Val Loss | Val F1 |
 |-------|-----------|----------|----------|--------|
@@ -198,55 +295,14 @@ Fine-tuned CLIP ViT-B/32 + custom classifier head on 12,887 labeled memes.
 
 **Best checkpoint: Epoch 4 — Val F1 = 0.8219**
 
-Training setup: Google Colab T4 GPU, batch size 32, AdamW optimizer, cosine LR scheduling, weighted cross-entropy loss (1:2 class weighting for imbalance), partial fine-tuning (only last 2 transformer layers + projection layers + classifier head — 14.3% of parameters trainable).
-
-### Sample Output
-
-```
-══════════════════════════════════════════════════
-    MemeIQ — Analysis Report
-══════════════════════════════════════════════════
-
-  Extracted Text
-──────────────────────────────────────────────────
-  "When father brings a new electric car for me
-   First week: second week:"
-  OCR confidence: 87%
-
-  Sentiment
-──────────────────────────────────────────────────
-  Label: NEUTRAL  (84% confident)
-
-  Hate Speech Detection
-──────────────────────────────────────────────────
-  Label: NON-HATEFUL
-  Combined hate score: 23%
-  CLIP hate score: 18%
-
-  CLIP Multimodal Analysis
-──────────────────────────────────────────────────
-  Image class: a meme about dark humor (23%)
-  Image↔Text similarity: 0.35
-
-   Meme Category
-──────────────────────────────────────────────────
-  Category: dark humor (80% confident)
-
-  Completed in 20.16s
-══════════════════════════════════════════════════
-```
-
 ---
 
 ##  API Reference
 
-### `POST /analyze`
-Full multimodal meme analysis.
-
+### `POST /analyze` — Full multimodal analysis
 ```bash
 curl -X POST "http://localhost:8000/analyze" \
-  -F "file=@meme.jpg" \
-  -F "use_clip=true"
+  -F "file=@meme.jpg" -F "use_clip=true"
 ```
 
 **Response:**
@@ -261,47 +317,23 @@ curl -X POST "http://localhost:8000/analyze" \
 }
 ```
 
-### `POST /hate-speech`
-Hate speech detection only (faster).
+### `POST /hate-speech` — Hate detection only (faster)
+### `POST /sentiment` — Sentiment only (faster)
+### `GET /health` — Health check + model status
 
-### `POST /sentiment`
-Sentiment analysis only (faster).
-
-### `GET /health`
-Health check and model load status.
-
-Full interactive docs at `http://localhost:8000/docs`
+Full interactive docs: `http://localhost:8000/docs`
 
 ---
 
-##  Key Technical Decisions
+## 🔮 Roadmap
 
-**Why CLIP over ResNet?**
-ResNet classifies images into ImageNet categories (cat, dog, aircraft carrier) — useless for memes. CLIP understands open-ended text descriptions, so we can ask "is this a meme about gaming?" and get a meaningful answer.
-
-**Why Twitter-RoBERTa over raw BERT?**
-Raw BERT was pre-trained on Wikipedia and books — formal English. Meme text is informal, abbreviated, and sarcastic. Twitter-RoBERTa was fine-tuned on 124M tweets, which matches the linguistic style of memes much more closely.
-
-**Why zero-shot categorization over a trained classifier?**
-Training a category classifier requires thousands of labeled examples per category. Zero-shot MNLI lets us define categories in plain English and classify without any training data. We can add or change categories by editing a config file.
-
-**Why partial fine-tuning over full fine-tuning?**
-Full fine-tuning a 151M parameter model on 10k examples risks catastrophic forgetting and overfitting. Freezing the first 10 layers preserves general vision/language understanding while the last 2 layers + classifier head adapt to the hate detection task. This gave us Val F1 = 0.82 with only 14.3% of parameters trainable.
-
-**Why ensemble Dehatebert + CLIP?**
-Dehatebert is text-only — it has no idea what the image looks like. Our fine-tuned CLIP sees both modalities. Averaging their scores reduces false positives from either model alone while maintaining sensitivity to genuinely hateful content.
-
----
-
-##  Roadmap
-
-- [ ] GradCAM explainability — highlight image regions that triggered hate detection
-- [ ] Attention visualization — show which words drove sentiment/hate scores
+- [ ] GradCAM explainability — highlight image regions driving hate detection
+- [ ] Attention visualization — show which words drove sentiment scores
 - [ ] Deploy on HuggingFace Spaces with Gradio
-- [ ] Fine-tune on additional meme datasets (MemeCap, MultiOFF)
-- [ ] LoRA fine-tuning for larger CLIP variants (ViT-L/14)
-- [ ] Confidence-based human review queue integration
-- [ ] Multi-language OCR and analysis support
+- [ ] Dynamic content moderation with live Reddit/Twitter meme fetching (proposed in paper §6.8)
+- [ ] Fine-tune on additional datasets (MemeCap, MultiOFF, MAMI)
+- [ ] LoRA fine-tuning for CLIP ViT-L/14
+- [ ] Multi-language OCR and analysis
 
 ---
 
