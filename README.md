@@ -11,7 +11,7 @@
 
 **A production-grade multimodal AI system for meme understanding, hate speech detection, sentiment analysis, and category classification.**
 
-*Based on a shortlisted research paper authored by Pranav Madanu and Rohan Madanu, under the guidance of Dr. B. Mohan Rao, KLH University.*
+*Based on a shortlisted research paper authored by Pranav Madanu and Rohan Madanu, and Dr. B. Mohan Rao, KLH University.*
 
 [Research Paper](#-research-paper) • [What Changed](#-from-paper-to-production--what-we-upgraded) • [Architecture](#-system-architecture) • [Models](#-models-used) • [Setup](#-quick-start) • [Results](#-results)
 
