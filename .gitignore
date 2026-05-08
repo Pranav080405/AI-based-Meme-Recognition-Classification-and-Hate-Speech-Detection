@@ -1,0 +1,22 @@
+# Model weights (too large for GitHub)
+models/clip_finetuned.pt
+*.pt
+*.pth
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Logs
+logs/
+
+# Mac
+.DS_Store
+
+# Downloaded images (from Colab training)
+hateful_memes_images/
+
+# Jupyter
+.ipynb_checkpoints/
