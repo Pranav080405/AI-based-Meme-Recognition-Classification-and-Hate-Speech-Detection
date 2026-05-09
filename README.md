@@ -61,6 +61,10 @@ The ablation study was particularly significant — it confirmed the core thesis
 ## 🔄 From Paper to Production — What We Upgraded
 
 The paper established the research foundation. This repository takes every component and upgrades it to production-grade quality, replacing prototype implementations with state-of-the-art models and a full software stack.
+here's the app running as a local Streamlit web app:
+
+<img width="1277" height="707" alt="image" src="https://github.com/user-attachments/assets/12519760-72cd-4273-979c-4575938f482b" />
+
 
 ### 1. Sentiment Analysis: Raw BERT → Twitter-RoBERTa
 
