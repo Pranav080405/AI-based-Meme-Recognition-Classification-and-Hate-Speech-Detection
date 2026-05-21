@@ -29,6 +29,13 @@ This repository is the direct implementation of the research paper:
 
 The paper is available in this repository: [`Meme_classification_ResearchPaper_draft.pdf`](./Meme_classification_ResearchPaper_draft.pdf)
 
+##  Publication
+
+Published as a conference proceeding at MIGS-2025  
+International Conference on Multidisciplinary Innovations for Global Sustainability and Development  
+GH Raisoni University, Amravati  
+Pages: 335–343 (provided in the repo)
+
 ### What the Paper Proposed
 
 The research identified a critical gap in content moderation: over 60% of hate speech on platforms like Twitter and Facebook is embedded in memes, yet existing tools analyze text and images in isolation — completely missing the contextual interplay between them.
