@@ -196,6 +196,49 @@ The paper's implementation was a single Colab notebook (~150 lines). This reposi
 
 ---
 
+
+## 🛠️ Python Packages & Frameworks Used
+
+### Core Deep Learning
+- `torch` — PyTorch deep learning framework
+- `torchvision` — Image utilities and transforms
+- `transformers` — HuggingFace transformer models
+- `datasets` — HuggingFace dataset loading and preprocessing
+
+### NLP & Multimodal Models
+- `transformers` — BERT, RoBERTa, DehateBERT, CLIP
+- `tokenizers` — Fast tokenizer backend for transformers
+
+### OCR & Computer Vision
+- `easyocr` — OCR text extraction from memes
+- `opencv-python` (`cv2`) — Contrast enhancement and image preprocessing
+- `Pillow` (`PIL`) — Image loading and manipulation
+- `numpy` — Numerical and array operations
+
+### Evaluation & Visualization
+- `scikit-learn` — Accuracy, F1-score, classification reports
+- `matplotlib` — Training curves and visualizations
+
+### API & Backend
+- `fastapi` — REST API backend
+- `uvicorn` — ASGI server for FastAPI
+- `pydantic` — Request/response schema validation
+- `python-multipart` — File upload handling
+
+### Frontend UI
+- `streamlit` — Interactive web interface for meme analysis
+
+### Logging & Utilities
+- `loguru` — Structured logging
+- `tqdm` — Progress bars during training/inference
+- `requests` — Dataset image downloading and HTTP requests
+
+### Testing
+- `pytest` — Unit and integration testing
+
+---
+
+
 ## 🤖 Models Used
 
 | Task | Model | Parameters | Why |
